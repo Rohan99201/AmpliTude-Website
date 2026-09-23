@@ -1,0 +1,36 @@
+variable,type,scope,example,description
+tealium_event,string,page + link,product_view,"Event name: page_view, category_view, search, product_view, purchase (page); cart_add, cart_remove, checkout, user_register, user_login, user_logout, email_signup (link)"
+page_type,string,page + link,product,"home, category, search, product, cart, checkout, order_confirmation, account"
+page_name,string,page + link,product:ethiopia-guji,<page_type>:<slug>
+site_section,string,page,coffee,Top-level navigation area
+site_language,string,page + link,en,en or ar
+site_country,string,page + link,AE,ISO 3166-1 alpha-2 storefront country
+site_currency,string,page + link,AED,ISO 4217
+site_environment,string,page,prod,"dev, qa, prod"
+customer_login_status,string,page + link,guest,logged_in or guest
+customer_id,string,page + link,C-104233,Internal customer ID when logged in. Never email or phone.
+customer_type,string,page,returning,new or returning
+category_name,string,page,single origin,Category and product pages
+search_keyword,string,page,ethiopia,Lowercased search term
+search_results,number,page,3,Result count
+product_id,array,page + link,["ETH-GUJI-250"],Index-aligned with other product_* arrays
+product_name,array,page + link,["Ethiopia Guji"],
+product_category,array,page + link,["single origin"],
+product_brand,array,page + link,["Harra Roastery"],
+product_variant,array,page + link,["250g whole bean"],
+product_unit_price,array,page + link,[68],Numbers
+product_quantity,array,page + link,[2],Numbers
+cart_total_items,number,page + link,3,After the change
+cart_total_value,number,page + link,204,After the change
+checkout_step,number,page + link,1,
+order_id,string,page,HR-20260924-4821,Order confirmation first render only
+order_subtotal,number,page,204,
+order_shipping,number,page,15,
+order_tax,number,page,10.95,
+order_discount,number,page,0,
+order_total,number,page,229.95,Sent to Amplitude as revenue
+order_currency,string,page,AED,
+order_payment_type,string,page,card,"card, apple_pay, cash_on_delivery"
+order_coupon_code,string,page,WELCOME10,When used
+auth_method,string,link,email,"user_register, user_login"
+signup_location,string,link,footer,email_signup
