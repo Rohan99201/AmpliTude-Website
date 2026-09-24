@@ -31,6 +31,10 @@
       out.product_brand.push(p.brand); out.product_variant.push(l.variant); out.product_unit_price.push(p.price);
       out.product_quantity.push(l.qty);
     });
+    // Amplitude: top-level copies so Amplitude can group events by product name / category
+    // (the product_* arrays still feed the "products" list on each event).
+    out.amplitude_prop_product_name = out.product_name.slice();
+    out.amplitude_prop_product_category = out.product_category.slice();
     return out;
   }
   window.productArrays = productArrays;

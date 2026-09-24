@@ -33,6 +33,10 @@ var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function 
   }
   function arr(v) { return v === undefined || v === null || v === "" ? [] : (Object.prototype.toString.call(v) === "[object Array]" ? v : [v]); }
   function num(v) { var n = typeof v === "number" ? v : parseFloat(v); return isNaN(n) ? undefined : n; }
+  function uuid() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16); });
+  }
   function clean(o) { var r = {}; for (var k in o) { if (o[k] !== undefined && o[k] !== null && o[k] !== "") r[k] = o[k]; } return r; }
 
   function products(b) {
@@ -120,7 +124,11 @@ var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function 
     if (!amp || typeof amp.initAll !== "function") { state.status = "failed"; console.warn("[Amplitude] SDK loaded but initAll is missing."); return; }
     if (!window.__ampTealiumInit) {
       window.__ampTealiumInit = true;
+      var newDevice = false;
+      try { newDevice = localStorage.getItem("amp_tealium_new_device") === "1"; localStorage.removeItem("amp_tealium_new_device"); } catch (e) {}
       state.initPromise = amp.initAll(key, {"serverZone":"EU","analytics":{"autocapture":true},"sessionReplay":{"sampleRate":1}});
+      // Pending logout: applied before Session Replay is added, so both SDKs start on the same new device ID.
+      if (newDevice) amp.setDeviceId(uuid());
       debug("init", "initAll", { serverZone: "EU" });
     }
     state.status = "ready";
@@ -159,8 +167,13 @@ var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function 
     withAmplitude(function (amp) {
       var ev = b.tealium_event;
       if (ev === "user_logout") {
-        // Flush first so events already queued keep the logged-in user ID, then start a fresh anonymous identity.
-        var done = function () { amp.reset(); debug("reset", "user_logout", {}); };
+        // Clear the user now; issue a fresh device ID on the next page load, before Session Replay starts.
+        // (Changing the device ID mid-page leaves Session Replay uploading under the old ID -> "Device ID mismatch".)
+        var done = function () {
+          amp.setUserId(undefined);
+          try { localStorage.setItem("amp_tealium_new_device", "1"); } catch (e) {}
+          debug("reset", "user_logout (new device ID on next page)", {});
+        };
         try {
           Promise.resolve(state.initPromise)
             .then(function () { return amp.flush().promise; })
@@ -189,6 +202,13 @@ var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function 
       if (ev === "purchase" && b.order_id && seenOrder(String(b.order_id))) { debug("skip", "duplicate purchase " + b.order_id, {}); return; }
       var props = m.props(b), ctx = context(b);
       for (var k in ctx) { if (props[k] === undefined) props[k] = ctx[k]; }
+      // Extra properties for built-in events (e.g. purchase): amplitude_prop_<name> / amplitude_event_properties
+      // are merged in when the call has no amplitude_event (otherwise they belong to that custom event).
+      if (!b.amplitude_event) {
+        var ex = b.amplitude_event_properties || {}, kk;
+        for (kk in ex) props[kk] = ex[kk];
+        for (kk in b) { if (kk.indexOf("amplitude_prop_") === 0) props[kk.slice(15)] = b[kk]; }
+      }
       track(amp, m.name, props, m.options ? m.options(b) : undefined);
     });
   };
