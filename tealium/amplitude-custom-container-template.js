@@ -1,16 +1,17 @@
-/* =====================================================================
-   Amplitude Unified (Analytics + Session Replay) for Tealium iQ
-   ---------------------------------------------------------------------
-   WHERE TO PASTE
-   Tealium iQ > Tags > + Add Tag > "Tealium Custom Container".
-   Easiest: replace the whole template with amplitude-custom-container-template.js.
-   Or paste this whole block inside u.send(a, b),
-   between "Start Tag Sending Code" and "End Tag Sending Code".
-   Also make sure the template has:  u.ev = {"view": 1, "link": 1};
+//~~tv:20010.20230630
+//~~tc: Tealium Custom Container
+//~~tc: Updated Tealium loader to 4.35 version
+//~~tc: Amplitude Unified (Analytics + Session Replay, EU) via the tealium_event data layer
 
-   Inside Tealium, a = "view" | "link" and b = the Tealium data layer.
-   The same file runs in the demo site's simulation mode.
-   ===================================================================== */
+/*
+  Amplitude Unified for Tealium iQ
+  - Tag Library Code: defines window.ampTealiumSend once (loads the SDK, runs initAll once, maps events).
+  - Tag Sending Code: forwards every utag.view / utag.link call (a = "view" | "link", b = data layer).
+  - No mappings or extensions needed: the code reads b (tealium_event, page_type, product_*, order_* ...).
+  - Load rule: All Pages. Consent category: Analytics.
+*/
+
+/* Start Tag Library Code */
 var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function () {
 
   // Amplitude ingestion keys per Tealium environment (b["ut.env"]) — public by design.
@@ -184,6 +185,73 @@ var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function 
     });
   };
 })();
+/* End Tag Library Code */
 
-// Runs inside Tealium's u.send(a, b). Outside Tealium (demo simulation) a/b are undefined and this is skipped.
-if (typeof a !== "undefined" && typeof b !== "undefined") { ampTealiumSend(a, b); }
+//tealium universal tag - utag.sender.custom_container ut4.0.##UTVERSION##, Copyright ##UTYEAR## Tealium.com Inc. All Rights Reserved.
+try {
+  (function (id, loader) {
+    var u = {};
+    utag.o[loader].sender[id] = u;
+
+    // Please do not modify
+    if (utag.ut === undefined) { utag.ut = {}; }
+    // Start Tealium loader 4.35
+    if (utag.ut.loader === undefined) { u.loader = function (o) { var b, c, l, a = document; if (o.type === "iframe") { b = a.createElement("iframe"); o.attrs = o.attrs || { "height" : "1", "width" : "1", "style" : "display:none" }; for( l in utag.loader.GV(o.attrs) ){ b.setAttribute( l, o.attrs[l] ); } b.setAttribute("src", o.src); }else if (o.type=="img"){ utag.DB("Attach img: "+o.src); b=new Image();b.src=o.src; return; }else{ b = a.createElement("script");b.language="javascript";b.type="text/javascript";b.async=1;b.charset="utf-8"; for( l in utag.loader.GV(o.attrs) ){ b[l] = o.attrs[l]; } b.src = o.src; } if(o.id){b.id=o.id}; if (typeof o.cb=="function") { if(b.addEventListener) { b.addEventListener("load",function(){o.cb()},false); }else { /* old IE support */ b.onreadystatechange=function(){if(this.readyState=='complete'||this.readyState=='loaded'){this.onreadystatechange=null;o.cb()}}; } } l = o.loc || "head"; c = a.getElementsByTagName(l)[0]; if (c) { utag.DB("Attach to "+l+": "+o.src); if (l == "script") { c.parentNode.insertBefore(b, c); } else { c.appendChild(b) } } } } else { u.loader = utag.ut.loader; }
+    // End Tealium loader
+
+    u.ev = {"view": 1, "link": 1};
+
+    u.initialized = false;
+
+    ##UTGEN##
+
+    u.send = function(a, b) {
+      if (u.ev[a] || u.ev.all !== undefined) {
+        //##UTENABLEDEBUG##utag.DB("send:##UTID##");
+
+        var c, d, e, f, i;
+
+        u.data = {
+          /* No default parameters needed: the Amplitude code reads the data layer (b) directly. */
+        };
+
+
+        /* Start Tag-Scoped Extensions Code */
+        /* Please Do Not Edit This Section */
+        ##UTEXTEND##
+        /* End Tag-Scoped Extensions Code */
+
+
+        /* Start Mapping Code */
+        for (d in utag.loader.GV(u.map)) {
+          if (b[d] !== undefined && b[d] !== "") {
+            e = u.map[d].split(",");
+            for (f = 0; f < e.length; f++) {
+              u.data[e[f]] = b[d];
+            }
+          }
+        }
+        /* End Mapping Code */
+
+
+        /* Start Tag Sending Code */
+
+          // Forward this view/link event to Amplitude (SDK load, initAll and event mapping live in Tag Library Code).
+          window.ampTealiumSend(a, b);
+
+        /* End Tag Sending Code */
+
+
+        /* Loader Callback / Loader Function Call sections are not used:
+           the Amplitude SDK is loaded once by ampTealiumSend in Tag Library Code. */
+
+
+        //##UTENABLEDEBUG##utag.DB("send:##UTID##:COMPLETE");
+      }
+    };
+    utag.o[loader].loader.LOAD(id);
+  })("##UTID##", "##UTLOADERID##");
+} catch (error) {
+  utag.DB(error);
+}
+//end tealium universal tag

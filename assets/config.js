@@ -3,6 +3,6 @@
    (tealium/amplitude-custom-container.js) runs locally, so events still reach Amplitude.
    Fill account/profile/env to load your real Tealium iQ profile instead. */
 window.SITE_CONFIG = {
-  tealium: { account: "", profile: "", env: "dev" },
-  site: { language: "en", country: "AE", currency: "AED", environment: "dev" }
+  tealium: { account: "nabler-sandbox", profile: "rohan.c", env: "prod" },
+  site: { language: "en", country: "AE", currency: "AED", environment: "prod" }
 };
