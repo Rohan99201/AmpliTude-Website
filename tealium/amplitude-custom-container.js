@@ -175,6 +175,15 @@ var ampTealiumSend = window.ampTealiumSend = window.ampTealiumSend || (function 
         debug("track", "Viewed Home Page", { prompt_version: "BA400.4" });
       }
 
+      // Custom events from Tealium extensions: set b.amplitude_event (event name) and optionally
+      // b.amplitude_event_properties (object) or flat b.amplitude_prop_<name> variables.
+      if (b.amplitude_event) {
+        var cp = context(b), extra = b.amplitude_event_properties || {}, key;
+        for (key in extra) cp[key] = extra[key];
+        for (key in b) { if (key.indexOf("amplitude_prop_") === 0) cp[key.slice(15)] = b[key]; }
+        track(amp, String(b.amplitude_event), clean(cp));
+      }
+
       var m = EVENTS[ev];
       if (!m) return;
       if (ev === "purchase" && b.order_id && seenOrder(String(b.order_id))) { debug("skip", "duplicate purchase " + b.order_id, {}); return; }
